@@ -9,11 +9,10 @@ import {
   Trash2,
   MoreVertical,
 } from "lucide-react";
-import { Dropdown } from "antd";
+import { Dropdown, Input, Modal } from "antd";
 import { cn } from "@/lib/utils";
 import { FileTreeNode } from "@/types";
 import { useFileStore } from "@/store/fileStore";
-import { ask } from "@tauri-apps/plugin-dialog";
 
 interface TreeViewProps {
   nodes: FileTreeNode[];
@@ -73,46 +72,27 @@ const TreeNode = memo(function TreeNode({
     setIsRenaming(false);
   };
 
-  const handleDelete = async () => {
-    // Get the filename for clear confirmation
+  const handleDelete = () => {
     const fileName = node.name.replace(".excalidraw", "");
 
-    try {
-      // Use Tauri's native dialog API for confirmation
-      const confirmed = await ask(`你确定要删除"${fileName}"吗？`, {
-        title: "确认删除",
-        kind: "warning",
-        okLabel: "删除",
-        cancelLabel: "取消",
-      });
-
-      console.log("Tauri dialog response:", confirmed, "for file:", fileName);
-
-      // Check if user clicked Delete (true) or Cancel (false)
-      if (confirmed === true) {
-        console.log(
-          "✅ User clicked Delete, proceeding with deletion of:",
-          node.path,
-        );
-        // Delete the file
+    Modal.confirm({
+      title: "确认删除",
+      content: `你确定要删除"${fileName}"吗？`,
+      okText: "删除",
+      cancelText: "取消",
+      okType: "danger",
+      onOk: async () => {
         try {
           await deleteFile(node.path);
-          console.log("✅ File deleted successfully");
         } catch (error) {
-          console.error("❌ Failed to delete file:", error);
-          // Use Tauri dialog for error too
           const { message } = await import("@tauri-apps/plugin-dialog");
-          await message(`Failed to delete file: ${error}`, {
-            title: "Error",
+          await message(`删除文件失败: ${error}`, {
+            title: "错误",
             kind: "error",
           });
         }
-      } else {
-        console.log("❌ User clicked Cancel, file NOT deleted:", fileName);
-      }
-    } catch (error) {
-      console.error("Error showing confirmation dialog:", error);
-    }
+      },
+    });
   };
 
   const handleRenameClick = () => {
@@ -158,9 +138,8 @@ const TreeNode = memo(function TreeNode({
         )}
 
         {isRenaming ? (
-          <input
-            ref={renameInputRef}
-            type="text"
+          <Input
+            ref={renameInputRef as any}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => {
@@ -173,9 +152,11 @@ const TreeNode = memo(function TreeNode({
                 setIsRenaming(false);
               }
             }}
+            onBlur={() => setIsRenaming(false)}
             onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 text-sm px-2 py-1 border-2 border-blue-500 rounded-md outline-none focus:ring-2 focus:ring-blue-200 bg-white"
+            className="flex-1 text-sm"
+            size="small"
           />
         ) : (
           <span className="text-sm truncate flex-1">

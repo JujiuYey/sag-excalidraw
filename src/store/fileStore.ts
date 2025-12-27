@@ -343,7 +343,26 @@ export const useFileStore = create<FileStore>((set, get) => ({
       }
     }
 
-    const finalFileName = fileName || `未命名-${Date.now()}.excalidraw`;
+    let finalFileName: string;
+    if (fileName) {
+      finalFileName = fileName.endsWith(".excalidraw")
+        ? fileName
+        : `${fileName}.excalidraw`;
+    } else {
+      const unnamedFiles = state.files.filter((f) =>
+        f.name.startsWith("未命名"),
+      );
+      const maxSuffix = unnamedFiles.reduce((max, file) => {
+        const match = file.name.match(/未命名(?:-\d+)?$/);
+        if (match) {
+          const suffix = match[0].replace("未命名-", "");
+          const num = suffix === "未命名" ? 0 : parseInt(suffix, 10);
+          return Math.max(max, num);
+        }
+        return max;
+      }, -1);
+      finalFileName = `未命名${maxSuffix >= 0 ? `-${maxSuffix + 1}` : ""}.excalidraw`;
+    }
 
     try {
       message.loading("正在创建新文件...", 0);

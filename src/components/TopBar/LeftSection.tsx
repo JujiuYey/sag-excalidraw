@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { FilePlus } from "lucide-react";
 import { Button } from "antd";
 import { useUIStore } from "@/store/uiStore";
 import { useFileStore } from "@/store/fileStore";
@@ -20,8 +20,7 @@ export function LeftSection() {
       }
       return;
     }
-    const fileName = `未命名-${Date.now()}.excalidraw`;
-    await createNewFile(fileName);
+    await createNewFile();
   };
 
   return (
@@ -38,12 +37,10 @@ export function LeftSection() {
 
       <Button
         type="primary"
-        icon={<Plus className="w-4 h-4" />}
+        icon={<FilePlus className="w-4 h-4" />}
         onClick={handleNewFile}
         title={!currentDirectory ? "请先选择目录" : "创建新文件"}
-      >
-        新建文件
-      </Button>
+      />
     </div>
   );
 }
