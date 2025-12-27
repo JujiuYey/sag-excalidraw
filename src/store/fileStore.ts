@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { ExcalidrawFile, FileTreeNode } from "../types";
-import { ask } from "@tauri-apps/plugin-dialog";
-import { message } from "antd";
+import { message, Modal } from "antd";
 
 export interface FileStore {
   // 当前选中的目录
@@ -144,19 +143,21 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }
 
     if (state.isDirty && state.activeFile) {
-      const response = await ask(
-        `切换文件前要保存对 "${state.activeFile.name}" 的更改吗？`,
-        {
+      const activeFile = state.activeFile;
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Modal.confirm({
           title: "未保存的更改",
-          kind: "warning",
-          okLabel: "保存",
-          cancelLabel: "不保存",
-        },
-      );
+          content: `切换文件前要保存对 "${activeFile.name}" 的更改吗？`,
+          okText: "保存",
+          cancelText: "不保存",
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
 
-      if (response === true) {
+      if (confirmed) {
         await state.saveCurrentFile();
-      } else if (response === null) {
+      } else {
         return;
       }
     }
@@ -215,19 +216,21 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }
 
     if (state.isDirty && state.activeFile) {
-      const response = await ask(
-        `切换文件前要保存对 "${state.activeFile.name}" 的更改吗？`,
-        {
+      const activeFile = state.activeFile;
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Modal.confirm({
           title: "未保存的更改",
-          kind: "warning",
-          okLabel: "保存",
-          cancelLabel: "不保存",
-        },
-      );
+          content: `切换文件前要保存对 "${activeFile.name}" 的更改吗？`,
+          okText: "保存",
+          cancelText: "不保存",
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
 
-      if (response === true) {
+      if (confirmed) {
         await state.saveCurrentFile();
-      } else if (response === null) {
+      } else {
         return;
       }
     }
@@ -312,19 +315,21 @@ export const useFileStore = create<FileStore>((set, get) => ({
     let { currentDirectory } = state;
 
     if (state.isDirty && state.activeFile) {
-      const response = await ask(
-        `创建新文件前要保存对 "${state.activeFile.name}" 的更改吗？`,
-        {
+      const activeFile = state.activeFile;
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Modal.confirm({
           title: "未保存的更改",
-          kind: "warning",
-          okLabel: "保存",
-          cancelLabel: "不保存",
-        },
-      );
+          content: `创建新文件前要保存对 "${activeFile.name}" 的更改吗？`,
+          okText: "保存",
+          cancelText: "不保存",
+          onOk: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      });
 
-      if (response === true) {
+      if (confirmed) {
         await state.saveCurrentFile();
-      } else if (response === null) {
+      } else {
         return;
       }
     }
