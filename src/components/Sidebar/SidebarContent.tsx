@@ -1,4 +1,4 @@
-import { TreeView } from "@/components/TreeView";
+import { TreeView } from "@/components/Sidebar/TreeView";
 import { FileTreeNode } from "@/types";
 
 interface SidebarContentProps {

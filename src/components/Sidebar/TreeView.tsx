@@ -10,9 +10,9 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { Dropdown } from "antd";
-import { cn } from "../lib/utils";
-import { FileTreeNode } from "../types";
-import { useFileStore } from "../store/fileStore";
+import { cn } from "@/lib/utils";
+import { FileTreeNode } from "@/types";
+import { useFileStore } from "@/store/fileStore";
 import { ask } from "@tauri-apps/plugin-dialog";
 
 interface TreeViewProps {
