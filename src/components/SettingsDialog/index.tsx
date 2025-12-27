@@ -10,9 +10,10 @@ import { GeneralSettings } from "./GeneralSettings/GeneralSettings";
 import { AppearanceSettings } from "./AppearanceSettings/AppearanceSettings";
 import { AboutSettings } from "./AboutSettings/AboutSettings";
 import { AISettings } from "./AISettings/AISettings";
+import { PromptSettings } from "./PromptSettings/PromptSettings";
 import styles from "./index.module.css";
 
-type SettingsCategory = "general" | "appearance" | "about" | "ai";
+type SettingsCategory = "general" | "appearance" | "about" | "ai" | "prompt";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -27,8 +28,9 @@ interface Category {
 
 const categories: Category[] = [
   { id: "general", label: "通用", icon: <SettingOutlined /> },
-  { id: "ai", label: "AI", icon: <RobotOutlined /> },
   { id: "appearance", label: "外观", icon: <BgColorsOutlined /> },
+  { id: "ai", label: "AI设置", icon: <RobotOutlined /> },
+  { id: "prompt", label: "系统提示词", icon: <RobotOutlined /> },
   { id: "about", label: "关于", icon: <InfoCircleOutlined /> },
 ];
 
@@ -50,10 +52,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     switch (activeCategory) {
       case "general":
         return <GeneralSettings />;
-      case "ai":
-        return <AISettings />;
       case "appearance":
         return <AppearanceSettings />;
+      case "ai":
+        return <AISettings />;
+      case "prompt":
+        return <PromptSettings />;
       case "about":
         return <AboutSettings />;
       default:

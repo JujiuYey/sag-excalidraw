@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "antd";
 import styles from "./ErrorBoundary.module.css";
 
 interface Props {
@@ -75,20 +76,15 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <div className={styles.buttonGroup}>
-              <button
-                onClick={this.handleReset}
-                className={`${styles.button} ${styles.tryAgain}`}
-              >
-                重试
-              </button>
+              <Button onClick={this.handleReset}>重试</Button>
 
-              <button
+              <Button
+                type="primary"
                 onClick={this.handleReload}
-                className={`${styles.button} ${styles.reload}`}
+                icon={<RefreshCw className={styles.reloadIcon} />}
               >
-                <RefreshCw className={styles.reloadIcon} />
                 重新加载应用
-              </button>
+              </Button>
             </div>
           </div>
         </div>
