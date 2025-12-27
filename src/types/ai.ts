@@ -1,28 +1,59 @@
+/**
+ * AI 消息接口
+ * 表示对话中的一条消息
+ */
 export interface AIMessage {
+  /** 消息唯一标识符 */
   id: string;
+  /** 消息发送者角色：用户或助手 */
   role: "user" | "assistant";
+  /** 消息内容 */
   content: string;
+  /** 消息中包含的 Mermaid 代码（可选） */
   mermaidCode?: string;
+  /** 消息创建时间戳 */
   timestamp: number;
+  /** 消息状态：成功、错误或待处理 */
   status: "success" | "error" | "pending";
 }
 
+/**
+ * 模型配置接口
+ * 表示 AI 模型的配置参数
+ */
 export interface ModelConfig {
+  /** API 基础 URL 地址 */
   baseUrl: string;
+  /** API 密钥 */
   apiKey: string;
+  /** 模型名称 */
   model: string;
+  /** 生成温度参数（0-1），控制随机性 */
   temperature: number;
+  /** 最大生成 token 数量 */
   maxTokens: number;
+  /** 系统提示词，用于设定 AI 行为 */
   systemPrompt: string;
 }
 
+/**
+ * AI 聊天历史接口
+ * 表示一个文件的完整聊天历史记录
+ */
 export interface AIChatHistory {
+  /** 关联的文件路径 */
   filePath: string;
+  /** 消息历史列表 */
   messages: AIMessage[];
+  /** 模型配置 */
   modelConfig: ModelConfig;
+  /** 最后更新时间戳 */
   lastUpdated: number;
 }
 
+/**
+ * 默认模型配置
+ */
 export const DEFAULT_MODEL_CONFIG: ModelConfig = {
   baseUrl: "",
   apiKey: "",
@@ -77,12 +108,22 @@ graph TD
 - 确保语法正确且可被 Mermaid 解析`,
 };
 
+/**
+ * 从内容中提取 Mermaid 代码
+ * @param content 包含 Mermaid 代码块的内容
+ * @returns 提取的 Mermaid 代码，如果未找到则返回 null
+ */
 export const extractMermaidCode = (content: string): string | null => {
   const regex = /```mermaid\n([\s\S]*?)\n```/g;
   const match = regex.exec(content);
   return match ? match[1] : null;
 };
 
+/**
+ * 从内容中移除所有 Mermaid 代码块
+ * @param content 原始内容
+ * @returns 移除 Mermaid 代码后的内容
+ */
 export const stripMermaidCode = (content: string): string => {
   return content.replace(/```mermaid\n[\s\S]*?\n```/g, "").trim();
 };

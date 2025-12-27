@@ -83,11 +83,6 @@
   transition: ring 0.2s;
 }
 
-.input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
 .numberInput {
   width: 80px;
   height: 32px;
@@ -99,39 +94,6 @@
   transition: ring 0.2s;
 }
 
-.numberInput:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
 .largeNumberInput {
   width: 96px;
-}
-
-.textareaContainer {
-  padding: 12px 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.textareaHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.textarea {
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  outline: none;
-  resize: none;
-  transition: ring 0.2s;
-}
-
-.textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }

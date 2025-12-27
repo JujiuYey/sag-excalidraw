@@ -4,14 +4,12 @@ import {
   Key,
   Server,
   Settings2,
-  FileText,
   Zap,
   CheckCircle,
   XCircle,
   Loader2,
 } from "lucide-react";
 import { Button, Input, InputNumber, message } from "antd";
-const { TextArea } = Input;
 import { useAIConfigStore } from "@/store/aiConfigStore";
 import { ModelConfig, DEFAULT_MODEL_CONFIG } from "@/types/ai";
 import { createAIService } from "@/lib/ai-service";
@@ -145,21 +143,6 @@ export function AISettings() {
             onChange={(value) => handleChange("maxTokens", value ?? 1000)}
             onBlur={handleSave}
             className={`${styles.numberInput} ${styles.largeNumberInput}`}
-          />
-        </div>
-
-        <div className={styles.textareaContainer}>
-          <div className={styles.textareaHeader}>
-            <FileText className={styles.icon} />
-            <span className={styles.labelTitle}>系统提示词</span>
-          </div>
-          <TextArea
-            value={localConfig.systemPrompt}
-            onChange={(e) => handleChange("systemPrompt", e.target.value)}
-            onBlur={handleSave}
-            rows={8}
-            className={styles.textarea}
-            placeholder="你是一个专业的图表生成助手..."
           />
         </div>
       </div>
