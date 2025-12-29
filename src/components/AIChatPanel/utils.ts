@@ -1,10 +1,12 @@
+import { message } from "antd";
+
 export const generateId = () => Math.random().toString(36).substring(2, 15);
 
 export const copyToClipboard = async (content: string) => {
   try {
     await navigator.clipboard.writeText(content);
   } catch (error) {
-    console.error("Failed to copy:", error);
+    message.error(`复制失败，请检查浏览器权限: ${error}`);
   }
 };
 

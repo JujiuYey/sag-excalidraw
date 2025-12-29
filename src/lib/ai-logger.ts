@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { message } from "antd";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -49,7 +50,7 @@ class AILogger {
       };
       await invoke("save_ai_log", { log: rustLog });
     } catch (error) {
-      console.error("[AILogger] Failed to save log to Rust:", error);
+      message.error(`保存 AI 日志到 Rust 失败: ${error}`);
     }
   }
 
@@ -61,13 +62,13 @@ class AILogger {
     this.listeners.forEach((listener) => listener(log));
   }
 
-  log(level: LogLevel, category: string, message: string, data?: unknown) {
+  log(level: LogLevel, category: string, messageText: string, data?: unknown) {
     const entry: LogEntry = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
       level,
       category,
-      message,
+      message: messageText,
       data,
     };
     this.emit(entry);
@@ -77,16 +78,16 @@ class AILogger {
     const prefix = `[${timestamp}] [${category}]`;
     switch (level) {
       case "debug":
-        console.debug(prefix, message, data ?? "");
+        message.info(`${prefix} ${messageText} ${data ?? ""}`);
         break;
       case "info":
-        console.log(prefix, message, data ?? "");
+        message.info(`${prefix} ${messageText} ${data ?? ""}`);
         break;
       case "warn":
-        console.warn(prefix, message, data ?? "");
+        message.warning(`${prefix} ${messageText} ${data ?? ""}`);
         break;
       case "error":
-        console.error(prefix, message, data ?? "");
+        message.error(`${prefix} ${messageText} ${data ?? ""}`);
         break;
     }
   }
@@ -113,7 +114,7 @@ class AILogger {
       try {
         await invoke("clear_ai_logs");
       } catch (error) {
-        console.error("[AILogger] Failed to clear logs in Rust:", error);
+        message.error(`清除 AI 日志失败: ${error}`);
       }
     }
   }
@@ -125,6 +126,7 @@ class AILogger {
 
     try {
       const rustLogs: RustLogEntry[] = await invoke("load_ai_logs");
+      console.log("🚀 ~ AILogger ~ loadLogs ~ rustLogs:", rustLogs);
       const logs: LogEntry[] = rustLogs.map((log) => ({
         id: log.id,
         timestamp: log.timestamp,
@@ -136,7 +138,7 @@ class AILogger {
       this.logs = logs;
       return logs;
     } catch (error) {
-      console.error("[AILogger] Failed to load logs from Rust:", error);
+      message.error(`加载 AI 日志失败: ${error}`);
       return this.logs;
     }
   }

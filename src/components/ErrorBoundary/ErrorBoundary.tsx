@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "antd";
+import { Button, message } from "antd";
 import styles from "./ErrorBoundary.module.css";
 
 interface Props {
@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    message.error(`ErrorBoundary caught an error: ${error}`);
     this.setState({ errorInfo });
   }
 

@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useFileStore } from "../store/fileStore";
 import { useUIStore } from "../store/uiStore";
+import { message } from "antd";
 // import { convertPreferencesToRust } from "../lib/preferences";
 
 interface MenuCommand {
@@ -33,17 +34,11 @@ export function useMenuHandler() {
   };
 
   useEffect(() => {
-    console.log("🟣 [useMenuHandler] Setting up menu command listener");
     let unlisten: UnlistenFn | null = null;
 
     const setupListener = async () => {
       unlisten = await listen<MenuCommand>("menu-command", async (event) => {
         const { command, data } = event.payload;
-        console.log(
-          "🟣 [useMenuHandler] Menu command received:",
-          command,
-          data,
-        );
 
         switch (command) {
           // File menu commands
@@ -114,7 +109,7 @@ export function useMenuHandler() {
             break;
 
           default:
-            console.log("Unknown menu command:", command);
+            break;
         }
       });
     };
@@ -175,7 +170,6 @@ export function useMenuHandler() {
 
     if (newPath) {
       // Optionally update the active file to the new path
-      console.log("File saved as:", newPath);
     }
   };
 
@@ -262,7 +256,7 @@ export function useMenuHandler() {
             }, 100);
           }
         } catch (err) {
-          console.error("Failed to refresh view on fullscreen toggle:", err);
+          message.error(`Failed to refresh view on fullscreen toggle: ${err}`);
         }
       }, 300);
     }

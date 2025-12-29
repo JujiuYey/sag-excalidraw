@@ -106,7 +106,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
         },
       });
     } catch (error) {
-      console.error("Failed to save preferences:", error);
+      message.error(`保存偏好设置失败: ${error}`);
     }
   },
 }));

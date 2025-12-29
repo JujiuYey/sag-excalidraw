@@ -5,6 +5,7 @@ import {
   insertMermaidToCanvas,
 } from "@/lib/mermaid-to-excalidraw";
 import { copyToClipboard } from "./utils";
+import { message } from "antd";
 
 interface MessageFooterProps {
   content: string;
@@ -18,7 +19,7 @@ export function MessageFooter({ content }: MessageFooterProps) {
     if (mermaidCode) {
       const success = await insertMermaidToCanvas(mermaidCode);
       if (!success) {
-        console.error("插入失败");
+        message.error("插入失败，请检查语法");
       }
     }
   };

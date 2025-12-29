@@ -388,7 +388,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
       await state.loadFile(file);
       message.success(`已创建新文件: ${finalFileName}`);
     } catch (error) {
-      console.error("Failed to create new file:", error);
       message.destroy();
       message.error(`创建文件失败: ${error}`);
     }
@@ -424,7 +423,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
       message.destroy();
       message.success(`已将文件重命名为: ${finalName}`);
     } catch (error) {
-      console.error("Failed to rename file:", error);
       message.destroy();
       message.error(`重命名文件失败: ${error}`);
     }
@@ -453,7 +451,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
       message.success("文件已删除");
       return true;
     } catch (error) {
-      console.error("[deleteFile] Failed to delete file:", error);
       message.destroy();
       message.error(`删除文件失败: ${error}`);
       throw error;

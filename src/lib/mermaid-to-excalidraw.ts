@@ -1,6 +1,7 @@
 import { parseMermaidToExcalidraw } from "@excalidraw/mermaid-to-excalidraw";
 import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
 import { getGlobalExcalidrawAPI } from "@/hooks/useMenuHandler";
+import { message } from "antd";
 
 export interface MermaidConversionResult {
   elements: any[];
@@ -58,7 +59,7 @@ export async function insertMermaidToCanvas(
 ): Promise<boolean> {
   const api = getGlobalExcalidrawAPI();
   if (!api) {
-    console.error("Excalidraw API not available");
+    message.error("Excalidraw API 不可用");
     return false;
   }
 
@@ -100,7 +101,7 @@ export async function insertMermaidToCanvas(
 
     return true;
   } catch (error) {
-    console.error("Failed to insert Mermaid to canvas:", error);
+    message.error(`插入 Mermaid 失败: ${error}`);
     return false;
   }
 }

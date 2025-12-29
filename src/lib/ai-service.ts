@@ -72,13 +72,8 @@ export class AIService {
       throw new AIServiceError("baseUrl 或 model 为空", undefined, false);
     }
 
-    console.log("[AI Service] baseUrl:", this.config.baseUrl);
-    console.log("[AI Service] model:", this.config.model);
-
     const formattedMessages = this.formatMessages(messages);
     const endpoint = `${this.config.baseUrl.replace(/\/$/, "")}/chat/completions`;
-
-    console.log("[AI Service] endpoint:", endpoint);
 
     if (onChunk) {
       return this.streamRequest(endpoint, formattedMessages, onChunk);
