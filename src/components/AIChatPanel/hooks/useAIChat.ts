@@ -4,7 +4,7 @@ import { useAIConfigStore } from "@/store/aiConfigStore";
 import { createAIService } from "@/lib/ai-service";
 import { getToolExecutor } from "@/lib/tool-executor";
 import { DEFAULT_TOOLS } from "@/constants/ai";
-import { generateId } from "../utils";
+import { generateId } from "../utils/utils";
 
 export function useAIChat() {
   const {

@@ -4,7 +4,7 @@ import {
   hasMermaidCode,
   insertMermaidToCanvas,
 } from "@/lib/mermaid-to-excalidraw";
-import { copyToClipboard } from "./utils";
+import { copyToClipboard } from "../utils/utils";
 import { message } from "antd";
 
 interface MessageFooterProps {

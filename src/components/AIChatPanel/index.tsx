@@ -2,9 +2,9 @@ import { useEffect, useRef, useCallback } from "react";
 import { XProvider, Sender } from "@ant-design/x";
 import { useUIStore } from "@/store/uiStore";
 import { useAIStore } from "@/store/aiStore";
-import { ChatHeader } from "./ChatHeader";
-import { ChatMessages } from "./ChatMessages";
-import { LogPanel } from "./LogPanel";
+import { ChatHeader } from "./components/ChatHeader";
+import { ChatMessages } from "./components/ChatMessages";
+import { LogPanel } from "./components/LogPanel";
 import { useAIChat } from "./hooks/useAIChat";
 
 const MIN_WIDTH = 20; // vw

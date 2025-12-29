@@ -1,7 +1,7 @@
 import { Bubble, Welcome, Think } from "@ant-design/x";
 import { Sparkles, Loader2 } from "lucide-react";
 import { AIMessage } from "@/types/ai";
-import { parseThinkContent } from "./utils";
+import { parseThinkContent } from "../utils/utils";
 import { MessageFooter } from "./MessageFooter";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
