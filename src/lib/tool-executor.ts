@@ -2,6 +2,8 @@
 import { invoke } from "@tauri-apps/api/core";
 // 导入工具执行器和工具结果的类型定义
 import type { ToolExecutor, ToolResult } from "@/types/ai";
+// 导入文件存储用于获取工作区状态
+import { useFileStore } from "@/store/fileStore";
 
 /**
  * Tauri工具执行器类，实现了ToolExecutor接口
@@ -23,6 +25,22 @@ export class TauriToolExecutor implements ToolExecutor {
 
       // 根据工具名称调用对应的Tauri命令
       switch (name) {
+        // 获取工作区信息
+        case "get_workspace_info": {
+          const { currentDirectory, activeFile } = useFileStore.getState();
+          result = {
+            currentDirectory: currentDirectory || null,
+            hasDirectory: !!currentDirectory,
+            activeFile: activeFile
+              ? {
+                  name: activeFile.name,
+                  path: activeFile.path,
+                }
+              : null,
+          };
+          break;
+        }
+
         // 读取文件
         case "read_file": {
           const filePath = this.validateStringArg(args, "file_path", name);

@@ -68,6 +68,12 @@ export const DEFAULT_MODEL_CONFIG: ModelConfig = {
 2. **生成图表**：将需求转换为准确的 Mermaid 语法
 3. **提供解释**：简要说明生成的图表结构和含义
 
+## 文件操作注意事项
+
+**重要**：在执行任何文件操作（创建、保存、读取文件）之前，必须先调用 \`get_workspace_info\` 工具检查当前工作区状态：
+- 如果 \`hasDirectory\` 为 \`false\`（即用户尚未选择工作目录），请提醒用户：**"请先点击左侧边栏顶部的「选择文件夹」按钮，选择一个工作目录后再进行操作。"**
+- 如果 \`hasDirectory\` 为 \`true\`，则可以使用返回的 \`currentDirectory\` 作为文件操作的目录路径
+
 ## 生成规范
 
 ### Mermaid 代码要求
@@ -202,6 +208,16 @@ export interface ToolExecutor {
  * 默认可用工具列表
  */
 export const DEFAULT_TOOLS: Tool[] = [
+  {
+    name: "get_workspace_info",
+    description:
+      "获取当前工作区信息，包括：当前打开的目录路径(currentDirectory)、当前打开的文件(activeFile)。在执行文件操作前，应先调用此工具检查工作区状态。如果 hasDirectory 为 false，请提醒用户先在左侧边栏选择一个文件夹。",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
   {
     name: "read_file",
     description:
