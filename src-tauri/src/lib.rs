@@ -7,6 +7,24 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+const AI_LOGS_FILE: &str = "ai_logs.json";
+const MAX_LOG_ENTRIES: usize = 1000;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogEntry {
+    pub id: String,
+    pub timestamp: u64,
+    pub level: String,
+    pub category: String,
+    pub message: String,
+    pub data: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LogStorage {
+    pub logs: Vec<LogEntry>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExcalidrawFile {
     pub name: String,
@@ -370,6 +388,66 @@ async fn create_new_file(directory: String, file_name: String) -> Result<String,
     }
 }
 
+fn get_logs_path(app: &AppHandle) -> PathBuf {
+    let config_dir = app.path().config_dir().unwrap_or(PathBuf::from("."));
+    config_dir.join(AI_LOGS_FILE)
+}
+
+#[tauri::command]
+async fn save_ai_log(app: AppHandle, log: LogEntry) -> Result<(), String> {
+    let logs_path = get_logs_path(&app);
+
+    let mut storage: LogStorage = if logs_path.exists() {
+        let content = fs::read_to_string(&logs_path)
+            .map_err(|e| e.to_string())?;
+        serde_json::from_str(&content).unwrap_or_else(|_| LogStorage { logs: Vec::new() })
+    } else {
+        LogStorage { logs: Vec::new() }
+    };
+
+    storage.logs.push(log);
+    if storage.logs.len() > MAX_LOG_ENTRIES {
+        storage.logs = storage.logs[storage.logs.len() - MAX_LOG_ENTRIES..].to_vec();
+    }
+
+    let content = serde_json::to_string_pretty(&storage)
+        .map_err(|e| e.to_string())?;
+
+    fs::write(&logs_path, content)
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn load_ai_logs(app: AppHandle) -> Result<Vec<LogEntry>, String> {
+    let logs_path = get_logs_path(&app);
+
+    if !logs_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let content = fs::read_to_string(&logs_path)
+        .map_err(|e| e.to_string())?;
+
+    let storage: LogStorage = serde_json::from_str(&content)
+        .map_err(|e| e.to_string())?;
+
+    Ok(storage.logs)
+}
+
+#[tauri::command]
+async fn clear_ai_logs(app: AppHandle) -> Result<(), String> {
+    let logs_path = get_logs_path(&app);
+
+    if logs_path.exists() {
+        fs::remove_file(&logs_path)
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 async fn get_preferences(app: AppHandle) -> Result<Preferences, String> {
     use tauri_plugin_store::StoreExt;
@@ -618,6 +696,9 @@ pub fn run() {
             save_preferences,
             watch_directory,
             force_close_app,
+            save_ai_log,
+            load_ai_logs,
+            clear_ai_logs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

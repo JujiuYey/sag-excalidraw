@@ -1,8 +1,10 @@
 import { useEffect, useRef, useCallback } from "react";
 import { XProvider, Sender } from "@ant-design/x";
 import { useUIStore } from "@/store/uiStore";
+import { useAIStore } from "@/store/aiStore";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
+import { LogPanel } from "./LogPanel";
 import { useAIChat } from "./hooks/useAIChat";
 
 const MIN_WIDTH = 300;
@@ -16,6 +18,8 @@ export function AIChatPanel() {
     setAIChatPanelWidth,
   } = useUIStore();
 
+  const { isLogPanelVisible, setLogPanelVisible } = useAIStore();
+
   const {
     aiMessages,
     aiIsLoading,
@@ -27,6 +31,10 @@ export function AIChatPanel() {
 
   const isResizing = useRef(false);
   const resizingRef = useRef<HTMLDivElement>(null);
+
+  const toggleLog = useCallback(() => {
+    setLogPanelVisible(!isLogPanelVisible);
+  }, [isLogPanelVisible, setLogPanelVisible]);
 
   useEffect(() => {
     if (!aiChatPanelVisible) {
@@ -111,7 +119,14 @@ export function AIChatPanel() {
           }}
         />
       </div>
-      <ChatHeader onClose={toggleAIChatPanel} onNewChat={clearAIMessages} />
+      <ChatHeader
+        onClose={toggleAIChatPanel}
+        onNewChat={clearAIMessages}
+        onToggleLog={toggleLog}
+      />
+      {isLogPanelVisible && (
+        <LogPanel onClose={() => setLogPanelVisible(false)} />
+      )}
       <XProvider>
         <div
           style={{

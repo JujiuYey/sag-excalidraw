@@ -1,4 +1,5 @@
 import type { Tool, ToolCall, ToolCallDelta, ToolExecutor } from "@/types/ai";
+import { aiLogger } from "@/lib/ai-logger";
 
 export interface AIServiceConfig {
   baseUrl: string;
@@ -103,20 +104,17 @@ export class AIService {
       throw new AIServiceError("Tool executor 未设置", undefined, false);
     }
 
-    console.log("\n========== [AI Service] 新请求开始 ==========");
-    console.log("[AI Service] baseUrl:", this.config.baseUrl);
-    console.log("[AI Service] model:", this.config.model);
-    console.log("[AI Service] tools count:", tools.length);
+    aiLogger.info("AI Service", "开始新请求");
+    aiLogger.info("AI Service", "baseUrl", this.config.baseUrl);
+    aiLogger.info("AI Service", "model", this.config.model);
+    aiLogger.info("AI Service", "tools count", tools.length);
 
     const formattedMessages = this.formatMessages(messages);
-    console.log("[AI Service] messages count:", formattedMessages.length);
-    console.log(
-      "[AI Service] messages:",
-      JSON.stringify(formattedMessages, null, 2),
-    );
+    aiLogger.info("AI Service", "messages count", formattedMessages.length);
+    aiLogger.debug("AI Service", "messages", formattedMessages);
 
     const endpoint = `${this.config.baseUrl.replace(/\/$/, "")}/chat/completions`;
-    console.log("[AI Service] endpoint:", endpoint);
+    aiLogger.info("AI Service", "endpoint", endpoint);
 
     return this.executeWithTools(endpoint, formattedMessages, tools, onChunk);
   }
@@ -263,9 +261,7 @@ export class AIService {
 
     while (iterations < this.maxIterations) {
       iterations++;
-      console.log(
-        `\n========== [AI Service] 第 ${iterations} 次迭代 ==========`,
-      );
+      aiLogger.info("AI Service", `第 ${iterations} 次迭代`);
 
       const requestBody = {
         model: this.config.model,
@@ -283,10 +279,7 @@ export class AIService {
         stream: true,
       };
 
-      console.log(
-        "[AI Service] 发送请求体:",
-        JSON.stringify(requestBody, null, 2),
-      );
+      aiLogger.debug("AI Service", "发送请求体", requestBody);
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -297,10 +290,10 @@ export class AIService {
         body: JSON.stringify(requestBody),
       });
 
-      console.log(
-        "[AI Service] 响应状态:",
-        response.status,
-        response.statusText,
+      aiLogger.info(
+        "AI Service",
+        "响应状态",
+        `${response.status} ${response.statusText}`,
       );
 
       if (!response.ok) {
@@ -428,18 +421,19 @@ export class AIService {
             },
           }));
 
-        console.log("\n========== [AI Service] 收到工具调用 ==========");
-        console.log("[AI Service] 工具调用数量:", toolCalls.length);
+        aiLogger.info(
+          "AI Service",
+          "收到工具调用",
+          `数量: ${toolCalls.length}`,
+        );
 
         for (let i = 0; i < toolCalls.length; i++) {
           const toolCall = toolCalls[i];
-          console.log(`\n--- 工具调用 #${i + 1} ---`);
-          console.log("[AI Service] tool_call_id:", toolCall.id);
-          console.log("[AI Service] function.name:", toolCall.function.name);
-          console.log(
-            "[AI Service] function.arguments:",
-            JSON.stringify(toolCall.function.arguments, null, 2),
-          );
+          aiLogger.info("AI Service", `工具调用 #${i + 1}`, {
+            tool_call_id: toolCall.id,
+            function_name: toolCall.function.name,
+            arguments: toolCall.function.arguments,
+          });
         }
 
         const toolResults: Array<{
@@ -451,14 +445,11 @@ export class AIService {
 
         for (const toolCall of toolCalls) {
           try {
-            console.log(
-              `\n========== [AI Service] 执行工具: ${toolCall.function.name} ==========`,
-            );
-            console.log("[AI Service] tool_call_id:", toolCall.id);
-            console.log(
-              "[AI Service] 参数:",
-              JSON.stringify(toolCall.function.arguments, null, 2),
-            );
+            aiLogger.info("AI Service", "执行工具", {
+              tool_call_id: toolCall.id,
+              name: toolCall.function.name,
+              arguments: toolCall.function.arguments,
+            });
 
             const result = await this.toolExecutor!.executeTool(
               toolCall.function.name,
@@ -476,7 +467,7 @@ export class AIService {
               content: resultContent,
             });
 
-            console.log("[AI Service] 工具执行结果:", resultContent);
+            aiLogger.info("AI Service", "工具执行结果", resultContent);
           } catch (error) {
             const errorContent = JSON.stringify({
               error: error instanceof Error ? error.message : "Unknown error",
@@ -489,15 +480,11 @@ export class AIService {
               content: errorContent,
             });
 
-            console.error(`[AI Service] 工具执行错误:`, error);
+            aiLogger.error("AI Service", "工具执行错误", error);
           }
         }
 
-        console.log("\n========== [AI Service] 工具结果汇总 ==========");
-        console.log(
-          "[AI Service] toolResults:",
-          JSON.stringify(toolResults, null, 2),
-        );
+        aiLogger.debug("AI Service", "工具结果汇总", toolResults);
 
         allMessages = [
           ...allMessages,
@@ -510,19 +497,28 @@ export class AIService {
 
         toolCallsAccumulator.clear();
       } else {
-        console.log("\n========== [AI Service] 请求完成 ==========");
-        console.log("[AI Service] finish_reason:", finishReason);
-        console.log("[AI Service] finalContent:", currentContent);
+        aiLogger.info("AI Service", "请求完成", {
+          finish_reason: finishReason,
+          finalContent,
+        });
         finalContent = currentContent;
         break;
       }
     }
 
     if (iterations >= this.maxIterations) {
-      console.warn("[AI Service] 达到最大迭代次数，停止工具执行");
+      aiLogger.warn(
+        "AI Service",
+        "达到最大迭代次数",
+        `iterations: ${iterations}`,
+      );
     }
 
-    console.log("\n========== [AI Service] 请求处理完成 ==========\n");
+    aiLogger.info(
+      "AI Service",
+      "请求处理完成",
+      `finalContent length: ${finalContent.length}`,
+    );
 
     return finalContent;
   }
