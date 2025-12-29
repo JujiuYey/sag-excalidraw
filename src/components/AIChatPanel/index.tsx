@@ -7,8 +7,8 @@ import { ChatMessages } from "./ChatMessages";
 import { LogPanel } from "./LogPanel";
 import { useAIChat } from "./hooks/useAIChat";
 
-const MIN_WIDTH = 300;
-const MAX_WIDTH = 600;
+const MIN_WIDTH = 20; // vw
+const MAX_WIDTH = 40; // vw
 
 export function AIChatPanel() {
   const {
@@ -53,11 +53,10 @@ export function AIChatPanel() {
     (e: MouseEvent) => {
       if (!isResizing.current) return;
 
-      const containerWidth =
-        resizingRef.current?.parentElement?.clientWidth || window.innerWidth;
-      const newWidth = containerWidth - e.clientX;
+      const newWidthPx = window.innerWidth - e.clientX;
+      const newWidthVw = (newWidthPx / window.innerWidth) * 100;
 
-      const clampedWidth = Math.min(Math.max(newWidth, MIN_WIDTH), MAX_WIDTH);
+      const clampedWidth = Math.min(Math.max(newWidthVw, MIN_WIDTH), MAX_WIDTH);
       setAIChatPanelWidth(clampedWidth);
     },
     [setAIChatPanelWidth],
@@ -85,7 +84,7 @@ export function AIChatPanel() {
     <div
       ref={resizingRef}
       style={{
-        width: aiChatPanelWidth,
+        width: `${aiChatPanelWidth}vw`,
         height: "100%",
         backgroundColor: "var(--color-background)",
         borderLeft: "1px solid var(--color-border)",
