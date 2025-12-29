@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { message } from "antd";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -28,7 +28,7 @@ class AILogger {
   private isTauri: boolean;
 
   constructor() {
-    this.isTauri = typeof window !== "undefined" && "__TAURI__" in window;
+    this.isTauri = isTauri();
   }
 
   addListener(listener: (log: LogEntry) => void): () => void {
