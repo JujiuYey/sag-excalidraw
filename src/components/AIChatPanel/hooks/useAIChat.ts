@@ -3,7 +3,7 @@ import { useAIStore } from "@/store/aiStore";
 import { useAIConfigStore } from "@/store/aiConfigStore";
 import { createAIService } from "@/lib/ai-service";
 import { getToolExecutor } from "@/lib/tool-executor";
-import { DEFAULT_TOOLS } from "@/types/ai";
+import { DEFAULT_TOOLS } from "@/constants/ai";
 import { generateId } from "../utils";
 
 export function useAIChat() {

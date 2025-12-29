@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button, Input } from "antd";
 const { TextArea } = Input;
 import { useAIConfigStore } from "@/store/aiConfigStore";
-import { ModelConfig, DEFAULT_MODEL_CONFIG } from "@/types/ai";
+import type { ModelConfig } from "@/types/ai";
+import { DEFAULT_MODEL_CONFIG } from "@/constants/ai";
 import styles from "./PromptSettings.module.css";
 
 export function PromptSettings() {

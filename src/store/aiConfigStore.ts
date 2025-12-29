@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { ModelConfig, DEFAULT_MODEL_CONFIG } from "@/types/ai";
+import type { ModelConfig } from "@/types/ai";
+import { DEFAULT_MODEL_CONFIG } from "@/constants/ai";
 
 export interface AIConfigStore {
   aiModelConfig: ModelConfig;

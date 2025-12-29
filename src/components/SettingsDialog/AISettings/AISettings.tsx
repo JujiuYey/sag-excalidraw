@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Button, Input, InputNumber, message } from "antd";
 import { useAIConfigStore } from "@/store/aiConfigStore";
-import { ModelConfig, DEFAULT_MODEL_CONFIG } from "@/types/ai";
+import type { ModelConfig } from "@/types/ai";
+import { DEFAULT_MODEL_CONFIG } from "@/constants/ai";
 import { createAIService } from "@/lib/ai-service";
 import styles from "./AISettings.module.css";
 
