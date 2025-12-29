@@ -1,8 +1,7 @@
-@import 'tailwindcss';
-
-@import '@excalidraw/excalidraw/index.css';
-@import "tw-animate-css";
-@import "antd/dist/reset.css";
+@import url('tailwindcss');
+@import url('@excalidraw/excalidraw/index.css');
+@import url("tw-animate-css");
+@import url("antd/dist/reset.css");
 
 @plugin 'tailwindcss-animate';
 
@@ -50,14 +49,14 @@ body,
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
-  --color-background: #ffffff;
+  --color-background: #fff;
   --color-foreground: #1f2937;
-  --color-card: #ffffff;
+  --color-card: #fff;
   --color-card-foreground: #1f2937;
-  --color-popover: #ffffff;
+  --color-popover: #fff;
   --color-popover-foreground: #1f2937;
   --color-primary: #3b82f6;
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground: #fff;
   --color-secondary: #f3f4f6;
   --color-secondary-foreground: #1f2937;
   --color-muted: #f3f4f6;

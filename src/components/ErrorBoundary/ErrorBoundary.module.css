@@ -10,9 +10,9 @@
   max-width: 28rem;
   width: 100%;
   padding: 1.5rem;
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
 }
 
 .header {
@@ -66,7 +66,7 @@
   font-size: 0.75rem;
   overflow: auto;
   white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .buttonGroup {
@@ -85,7 +85,7 @@
   justify-content: center;
   border: none;
   cursor: pointer;
-  color: #ffffff;
+  color: #fff;
 }
 
 .tryAgain {

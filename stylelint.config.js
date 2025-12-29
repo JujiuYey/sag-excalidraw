@@ -1,9 +1,26 @@
 export default {
   extends: [
     'stylelint-config-standard',
-    'stylelint-config-prettier',
   ],
   rules: {
+    'at-rule-no-unknown': [
+      true,
+      {
+        ignoreAtRules: [
+          'plugin',
+          'theme',
+          'source',
+          'utility',
+          'variant',
+          'custom-variant',
+          'config',
+          'tailwind',
+          'apply',
+          'layer',
+          'screen',
+        ],
+      },
+    ],
     'selector-class-pattern': null,
     'selector-id-pattern': null,
     'custom-property-pattern': null,
