@@ -103,15 +103,20 @@ export class AIService {
       throw new AIServiceError("Tool executor 未设置", undefined, false);
     }
 
-    console.log(
-      "[AI Service] sendMessageWithTools - baseUrl:",
-      this.config.baseUrl,
-    );
+    console.log("\n========== [AI Service] 新请求开始 ==========");
+    console.log("[AI Service] baseUrl:", this.config.baseUrl);
     console.log("[AI Service] model:", this.config.model);
     console.log("[AI Service] tools count:", tools.length);
 
     const formattedMessages = this.formatMessages(messages);
+    console.log("[AI Service] messages count:", formattedMessages.length);
+    console.log(
+      "[AI Service] messages:",
+      JSON.stringify(formattedMessages, null, 2),
+    );
+
     const endpoint = `${this.config.baseUrl.replace(/\/$/, "")}/chat/completions`;
+    console.log("[AI Service] endpoint:", endpoint);
 
     return this.executeWithTools(endpoint, formattedMessages, tools, onChunk);
   }
@@ -258,7 +263,30 @@ export class AIService {
 
     while (iterations < this.maxIterations) {
       iterations++;
-      console.log(`[AI Service] Tool execution iteration ${iterations}`);
+      console.log(
+        `\n========== [AI Service] 第 ${iterations} 次迭代 ==========`,
+      );
+
+      const requestBody = {
+        model: this.config.model,
+        messages: allMessages,
+        temperature: this.config.temperature,
+        max_tokens: this.config.maxTokens,
+        tools: tools.map((t) => ({
+          type: "function",
+          function: {
+            name: t.name,
+            description: t.description,
+            parameters: t.parameters,
+          },
+        })),
+        stream: true,
+      };
+
+      console.log(
+        "[AI Service] 发送请求体:",
+        JSON.stringify(requestBody, null, 2),
+      );
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -266,22 +294,14 @@ export class AIService {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.config.apiKey}`,
         },
-        body: JSON.stringify({
-          model: this.config.model,
-          messages: allMessages,
-          temperature: this.config.temperature,
-          max_tokens: this.config.maxTokens,
-          tools: tools.map((t) => ({
-            type: "function",
-            function: {
-              name: t.name,
-              description: t.description,
-              parameters: t.parameters,
-            },
-          })),
-          stream: true,
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      console.log(
+        "[AI Service] 响应状态:",
+        response.status,
+        response.statusText,
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -408,7 +428,19 @@ export class AIService {
             },
           }));
 
-        console.log("[AI Service] Executing tool calls:", toolCalls.length);
+        console.log("\n========== [AI Service] 收到工具调用 ==========");
+        console.log("[AI Service] 工具调用数量:", toolCalls.length);
+
+        for (let i = 0; i < toolCalls.length; i++) {
+          const toolCall = toolCalls[i];
+          console.log(`\n--- 工具调用 #${i + 1} ---`);
+          console.log("[AI Service] tool_call_id:", toolCall.id);
+          console.log("[AI Service] function.name:", toolCall.function.name);
+          console.log(
+            "[AI Service] function.arguments:",
+            JSON.stringify(toolCall.function.arguments, null, 2),
+          );
+        }
 
         const toolResults: Array<{
           role: "tool";
@@ -420,8 +452,12 @@ export class AIService {
         for (const toolCall of toolCalls) {
           try {
             console.log(
-              `[AI Service] Executing tool: ${toolCall.function.name}`,
-              toolCall.function.arguments,
+              `\n========== [AI Service] 执行工具: ${toolCall.function.name} ==========`,
+            );
+            console.log("[AI Service] tool_call_id:", toolCall.id);
+            console.log(
+              "[AI Service] 参数:",
+              JSON.stringify(toolCall.function.arguments, null, 2),
             );
 
             const result = await this.toolExecutor!.executeTool(
@@ -440,7 +476,7 @@ export class AIService {
               content: resultContent,
             });
 
-            console.log(`[AI Service] Tool result:`, resultContent);
+            console.log("[AI Service] 工具执行结果:", resultContent);
           } catch (error) {
             const errorContent = JSON.stringify({
               error: error instanceof Error ? error.message : "Unknown error",
@@ -453,9 +489,15 @@ export class AIService {
               content: errorContent,
             });
 
-            console.error(`[AI Service] Tool error:`, error);
+            console.error(`[AI Service] 工具执行错误:`, error);
           }
         }
+
+        console.log("\n========== [AI Service] 工具结果汇总 ==========");
+        console.log(
+          "[AI Service] toolResults:",
+          JSON.stringify(toolResults, null, 2),
+        );
 
         allMessages = [
           ...allMessages,
@@ -468,16 +510,19 @@ export class AIService {
 
         toolCallsAccumulator.clear();
       } else {
+        console.log("\n========== [AI Service] 请求完成 ==========");
+        console.log("[AI Service] finish_reason:", finishReason);
+        console.log("[AI Service] finalContent:", currentContent);
         finalContent = currentContent;
         break;
       }
     }
 
     if (iterations >= this.maxIterations) {
-      console.warn(
-        "[AI Service] Reached max iterations, stopping tool execution",
-      );
+      console.warn("[AI Service] 达到最大迭代次数，停止工具执行");
     }
+
+    console.log("\n========== [AI Service] 请求处理完成 ==========\n");
 
     return finalContent;
   }

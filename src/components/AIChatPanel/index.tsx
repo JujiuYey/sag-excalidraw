@@ -111,7 +111,7 @@ export function AIChatPanel() {
           }}
         />
       </div>
-      <ChatHeader onClose={toggleAIChatPanel} />
+      <ChatHeader onClose={toggleAIChatPanel} onNewChat={clearAIMessages} />
       <XProvider>
         <div
           style={{
