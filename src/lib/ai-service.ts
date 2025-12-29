@@ -1,3 +1,5 @@
+import type { Tool, ToolCall, ToolCallDelta, ToolExecutor } from "@/types/ai";
+
 export interface AIServiceConfig {
   baseUrl: string;
   apiKey: string;
@@ -8,9 +10,10 @@ export interface AIServiceConfig {
 }
 
 export interface StreamChunk {
-  type: "content" | "done" | "error";
+  type: "content" | "done" | "error" | "tool_calls";
   content?: string;
   error?: string;
+  toolCalls?: ToolCall[];
 }
 
 export class AIServiceError extends Error {
@@ -26,6 +29,8 @@ export class AIServiceError extends Error {
 
 export class AIService {
   private config: AIServiceConfig;
+  private toolExecutor: ToolExecutor | null = null;
+  private maxIterations: number = 10;
 
   constructor(config: Partial<AIServiceConfig> = {}) {
     this.config = {
@@ -46,8 +51,16 @@ export class AIService {
     return { ...this.config };
   }
 
+  setToolExecutor(executor: ToolExecutor) {
+    this.toolExecutor = executor;
+  }
+
+  setMaxIterations(max: number) {
+    this.maxIterations = max;
+  }
+
   async sendMessage(
-    messages: any[],
+    messages: unknown[],
     onChunk?: (chunk: StreamChunk) => void,
   ): Promise<string> {
     if (!this.config.apiKey) {
@@ -71,6 +84,36 @@ export class AIService {
     }
 
     return this.nonStreamRequest(endpoint, formattedMessages);
+  }
+
+  async sendMessageWithTools(
+    messages: unknown[],
+    tools: Tool[],
+    onChunk?: (chunk: StreamChunk) => void,
+  ): Promise<string> {
+    if (!this.config.apiKey) {
+      throw new AIServiceError("API key 为空", undefined, false);
+    }
+
+    if (!this.config.baseUrl || !this.config.model) {
+      throw new AIServiceError("baseUrl 或 model 为空", undefined, false);
+    }
+
+    if (!this.toolExecutor) {
+      throw new AIServiceError("Tool executor 未设置", undefined, false);
+    }
+
+    console.log(
+      "[AI Service] sendMessageWithTools - baseUrl:",
+      this.config.baseUrl,
+    );
+    console.log("[AI Service] model:", this.config.model);
+    console.log("[AI Service] tools count:", tools.length);
+
+    const formattedMessages = this.formatMessages(messages);
+    const endpoint = `${this.config.baseUrl.replace(/\/$/, "")}/chat/completions`;
+
+    return this.executeWithTools(endpoint, formattedMessages, tools, onChunk);
   }
 
   private async nonStreamRequest(
@@ -190,15 +233,264 @@ export class AIService {
     return fullContent;
   }
 
+  private async executeWithTools(
+    endpoint: string,
+    messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+    tools: Tool[],
+    onChunk?: (chunk: StreamChunk) => void,
+  ): Promise<string> {
+    type ChatMessage = {
+      role: "user" | "assistant" | "system" | "tool";
+      content: string;
+      tool_call_id?: string;
+      name?: string;
+    };
+    const toolCallsAccumulator = new Map<
+      number,
+      { id: string; name: string; arguments: string }
+    >();
+    let iterations = 0;
+    let allMessages: ChatMessage[] = messages.map((m) => ({
+      ...m,
+      role: m.role as "user" | "assistant" | "system",
+    }));
+    let finalContent = "";
+
+    while (iterations < this.maxIterations) {
+      iterations++;
+      console.log(`[AI Service] Tool execution iteration ${iterations}`);
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.config.model,
+          messages: allMessages,
+          temperature: this.config.temperature,
+          max_tokens: this.config.maxTokens,
+          tools: tools.map((t) => ({
+            type: "function",
+            function: {
+              name: t.name,
+              description: t.description,
+              parameters: t.parameters,
+            },
+          })),
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new AIServiceError(
+          `请求失败: ${response.status} ${response.statusText} - ${errorText}`,
+          response.status,
+          response.status === 429 || response.status >= 500,
+        );
+      }
+
+      if (!response.body) {
+        throw new AIServiceError("响应体为空", undefined, true);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let currentContent = "";
+      let finishReason: string | null = null;
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const dataStr = line.slice(6);
+
+              if (dataStr === "[DONE]") {
+                break;
+              }
+
+              try {
+                const data = JSON.parse(dataStr);
+                const choice = data.choices?.[0];
+
+                if (choice?.delta?.content) {
+                  const content = choice.delta.content;
+                  currentContent += content;
+                  if (onChunk) {
+                    onChunk({ type: "content", content });
+                  }
+                }
+
+                if (choice?.delta?.tool_calls) {
+                  const toolCallDeltas: ToolCallDelta[] = Array.isArray(
+                    choice.delta.tool_calls,
+                  )
+                    ? choice.delta.tool_calls
+                    : [];
+
+                  for (const delta of toolCallDeltas) {
+                    const existing = toolCallsAccumulator.get(delta.index) || {
+                      id: "",
+                      name: "",
+                      arguments: "",
+                    };
+
+                    if (delta.id) existing.id = delta.id;
+                    if (delta.function?.name)
+                      existing.name = delta.function.name;
+                    if (delta.function?.arguments) {
+                      existing.arguments += delta.function.arguments;
+                    }
+
+                    toolCallsAccumulator.set(delta.index, existing);
+                  }
+
+                  if (onChunk) {
+                    const toolCalls: ToolCall[] = Array.from(
+                      toolCallsAccumulator.values(),
+                    ).map((tc) => ({
+                      id: tc.id,
+                      type: "function" as const,
+                      function: {
+                        name: tc.name,
+                        arguments: JSON.parse(tc.arguments || "{}"),
+                      },
+                    }));
+
+                    if (toolCalls.length > 0) {
+                      onChunk({ type: "tool_calls", toolCalls });
+                    }
+                  }
+                }
+
+                if (choice?.finish_reason) {
+                  finishReason = choice.finish_reason;
+
+                  if (onChunk) {
+                    onChunk({ type: "done" });
+                  }
+                }
+              } catch {
+                // 忽略解析错误
+              }
+            }
+          }
+        }
+      } catch (error) {
+        throw new AIServiceError(`流式读取错误: ${error}`, undefined, true);
+      }
+
+      if (finishReason === "stop") {
+        finalContent = currentContent;
+        break;
+      }
+
+      if (finishReason === "tool_calls" && toolCallsAccumulator.size > 0) {
+        const toolCalls: ToolCall[] = Array.from(toolCallsAccumulator.values())
+          .filter((tc) => tc.id && tc.name)
+          .map((tc) => ({
+            id: tc.id,
+            type: "function" as const,
+            function: {
+              name: tc.name,
+              arguments: JSON.parse(tc.arguments || "{}"),
+            },
+          }));
+
+        console.log("[AI Service] Executing tool calls:", toolCalls.length);
+
+        const toolResults: Array<{
+          role: "tool";
+          tool_call_id: string;
+          name: string;
+          content: string;
+        }> = [];
+
+        for (const toolCall of toolCalls) {
+          try {
+            console.log(
+              `[AI Service] Executing tool: ${toolCall.function.name}`,
+              toolCall.function.arguments,
+            );
+
+            const result = await this.toolExecutor!.executeTool(
+              toolCall.function.name,
+              toolCall.function.arguments,
+            );
+
+            const resultContent = result.success
+              ? JSON.stringify(result.result)
+              : JSON.stringify({ error: result.error });
+
+            toolResults.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              name: toolCall.function.name,
+              content: resultContent,
+            });
+
+            console.log(`[AI Service] Tool result:`, resultContent);
+          } catch (error) {
+            const errorContent = JSON.stringify({
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+
+            toolResults.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              name: toolCall.function.name,
+              content: errorContent,
+            });
+
+            console.error(`[AI Service] Tool error:`, error);
+          }
+        }
+
+        allMessages = [
+          ...allMessages,
+          {
+            role: "assistant",
+            content: currentContent,
+          },
+          ...toolResults,
+        ];
+
+        toolCallsAccumulator.clear();
+      } else {
+        finalContent = currentContent;
+        break;
+      }
+    }
+
+    if (iterations >= this.maxIterations) {
+      console.warn(
+        "[AI Service] Reached max iterations, stopping tool execution",
+      );
+    }
+
+    return finalContent;
+  }
+
   async sendMessageStream(
-    messages: any[],
+    messages: unknown[],
     onChunk: (chunk: StreamChunk) => void,
   ): Promise<void> {
     await this.sendMessage(messages, onChunk);
   }
 
   async testConnection(): Promise<boolean> {
-    const testMessages: any[] = [
+    const testMessages: unknown[] = [
       {
         id: "test",
         role: "user",
@@ -213,7 +505,7 @@ export class AIService {
   }
 
   private formatMessages(
-    messages: any[],
+    messages: unknown[],
   ): Array<{ role: "user" | "assistant" | "system"; content: string }> {
     const systemMessage = this.config.systemPrompt
       ? [
@@ -224,7 +516,13 @@ export class AIService {
         ]
       : [];
 
-    const chatMessages = messages
+    const chatMessages = (
+      messages as Array<{
+        role: string;
+        content: string;
+        status: string;
+      }>
+    )
       .filter((m) => m.status === "success")
       .map((m) => ({
         role: m.role as "user" | "assistant",

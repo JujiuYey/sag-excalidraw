@@ -1,7 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAIStore } from "@/store/aiStore";
 import { useAIConfigStore } from "@/store/aiConfigStore";
 import { createAIService } from "@/lib/ai-service";
+import { getToolExecutor } from "@/lib/tool-executor";
+import { DEFAULT_TOOLS } from "@/types/ai";
 import { generateId } from "../utils";
 
 export function useAIChat() {
@@ -16,6 +18,13 @@ export function useAIChat() {
 
   const { aiModelConfig } = useAIConfigStore();
   const [inputValue, setInputValue] = useState("");
+  const [isUsingTools, setIsUsingTools] = useState(false);
+
+  useEffect(() => {
+    const service = createAIService(aiModelConfig);
+    const executor = getToolExecutor();
+    service.setToolExecutor(executor);
+  }, [aiModelConfig]);
 
   const handleSend = useCallback(async () => {
     if (!inputValue.trim() || aiIsLoading) return;
@@ -32,6 +41,7 @@ export function useAIChat() {
     });
 
     setAIIsLoading(true);
+    setIsUsingTools(false);
 
     const assistantMessageId = generateId();
     addAIMessage({
@@ -45,13 +55,27 @@ export function useAIChat() {
     try {
       const messages = useAIStore.getState().aiMessages;
       const service = createAIService(aiModelConfig);
-      await service.sendMessage(messages, (chunk) => {
+      service.setToolExecutor(getToolExecutor());
+
+      let currentContent = "";
+
+      await service.sendMessageWithTools(messages, DEFAULT_TOOLS, (chunk) => {
         if (chunk.type === "content") {
+          currentContent += chunk.content || "";
           const currentMessages = useAIStore.getState().aiMessages;
           const lastMessage = currentMessages[currentMessages.length - 1];
           if (lastMessage && lastMessage.id === assistantMessageId) {
-            const newContent = (lastMessage.content || "") + chunk.content;
-            updateLastAIMessage({ content: newContent });
+            updateLastAIMessage({ content: currentContent });
+          }
+        } else if (chunk.type === "tool_calls") {
+          setIsUsingTools(true);
+          const toolCount = chunk.toolCalls?.length || 0;
+          const currentMessages = useAIStore.getState().aiMessages;
+          const lastMessage = currentMessages[currentMessages.length - 1];
+          if (lastMessage && lastMessage.id === assistantMessageId) {
+            updateLastAIMessage({
+              content: currentContent + `\n\n[正在调用 ${toolCount} 个工具...]`,
+            });
           }
         } else if (chunk.type === "done") {
           updateLastAIMessage({ status: "success" });
@@ -87,5 +111,6 @@ export function useAIChat() {
     setInputValue,
     handleSend,
     clearAIMessages,
+    isUsingTools,
   };
 }

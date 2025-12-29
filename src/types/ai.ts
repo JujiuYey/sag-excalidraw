@@ -127,3 +127,183 @@ export const extractMermaidCode = (content: string): string | null => {
 export const stripMermaidCode = (content: string): string => {
   return content.replace(/```mermaid\n[\s\S]*?\n```/g, "").trim();
 };
+
+/**
+ * 工具参数模式定义
+ */
+export interface ToolParameters {
+  type: "object";
+  properties: Record<
+    string,
+    {
+      type: string;
+      description: string;
+      enum?: string[];
+    }
+  >;
+  required: string[];
+}
+
+/**
+ * 工具定义
+ */
+export interface Tool {
+  name: string;
+  description: string;
+  parameters: ToolParameters;
+}
+
+/**
+ * 工具调用中的函数信息
+ */
+export interface ToolCallFunction {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+/**
+ * 单个工具调用
+ */
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: ToolCallFunction;
+}
+
+/**
+ * 工具执行结果
+ */
+export interface ToolResult {
+  success: boolean;
+  result?: string;
+  error?: string;
+}
+
+/**
+ * 流式响应中的 tool_calls 增量
+ */
+export interface ToolCallDelta {
+  index: number;
+  id?: string;
+  function?: {
+    name?: string;
+    arguments?: string;
+  };
+}
+
+/**
+ * 工具执行器接口
+ */
+export interface ToolExecutor {
+  executeTool(name: string, args: Record<string, unknown>): Promise<ToolResult>;
+}
+
+/**
+ * 默认可用工具列表
+ */
+export const DEFAULT_TOOLS: Tool[] = [
+  {
+    name: "read_file",
+    description:
+      "读取指定路径的 Excalidraw 文件内容。参数 file_path 必须是有效的 .excalidraw 文件路径。",
+    parameters: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "要读取的文件路径，必须是 .excalidraw 文件",
+        },
+      },
+      required: ["file_path"],
+    },
+  },
+  {
+    name: "save_file",
+    description:
+      "保存内容到指定的 Excalidraw 文件。参数 file_path 是文件路径，content 是 JSON 内容。",
+    parameters: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "要保存的文件路径，必须是 .excalidraw 文件",
+        },
+        content: {
+          type: "string",
+          description: "要保存的 JSON 内容",
+        },
+      },
+      required: ["file_path", "content"],
+    },
+  },
+  {
+    name: "create_new_file",
+    description:
+      "在指定目录中创建一个新的 Excalidraw 文件。参数 directory 是目录路径，file_name 是文件名（可以不带 .excalidraw 后缀）。",
+    parameters: {
+      type: "object",
+      properties: {
+        directory: {
+          type: "string",
+          description: "要创建文件的目录路径",
+        },
+        file_name: {
+          type: "string",
+          description: "新文件名（会自动添加 .excalidraw 后缀）",
+        },
+      },
+      required: ["directory", "file_name"],
+    },
+  },
+  {
+    name: "delete_file",
+    description:
+      "删除指定的 Excalidraw 文件。这是一个危险操作，请确保用户确认要删除。",
+    parameters: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "要删除的文件路径",
+        },
+      },
+      required: ["file_path"],
+    },
+  },
+  {
+    name: "list_excalidraw_files",
+    description: "列出指定目录及其子目录中所有的 Excalidraw 文件。",
+    parameters: {
+      type: "object",
+      properties: {
+        directory: {
+          type: "string",
+          description: "要搜索的目录路径",
+        },
+      },
+      required: ["directory"],
+    },
+  },
+  {
+    name: "get_file_tree",
+    description:
+      "获取指定目录的 Excalidraw 文件树结构，显示目录和文件的层级关系。",
+    parameters: {
+      type: "object",
+      properties: {
+        directory: {
+          type: "string",
+          description: "要获取文件树的根目录路径",
+        },
+      },
+      required: ["directory"],
+    },
+  },
+];
+
+/**
+ * 检查是否是危险操作
+ */
+export const isDangerousTool = (toolName: string): boolean => {
+  return ["delete_file"].includes(toolName);
+};
