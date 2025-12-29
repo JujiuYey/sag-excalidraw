@@ -3,6 +3,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { AIMessage } from "@/types/ai";
 import { parseThinkContent } from "./utils";
 import { MessageFooter } from "./MessageFooter";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ChatMessagesProps {
   messages: AIMessage[];
@@ -105,7 +106,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
                         {part.content}
                       </Think>
                     ) : (
-                      <div key={index}>{part.content}</div>
+                      <MarkdownRenderer key={index} content={part.content} />
                     ),
                   )}
                 </div>

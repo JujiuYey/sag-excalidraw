@@ -1,12 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { XProvider, Sender } from "@ant-design/x";
 import { useUIStore } from "@/store/uiStore";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
 import { useAIChat } from "./hooks/useAIChat";
 
+const MIN_WIDTH = 300;
+const MAX_WIDTH = 600;
+
 export function AIChatPanel() {
-  const { aiChatPanelVisible, toggleAIChatPanel } = useUIStore();
+  const {
+    aiChatPanelVisible,
+    toggleAIChatPanel,
+    aiChatPanelWidth,
+    setAIChatPanelWidth,
+  } = useUIStore();
 
   const {
     aiMessages,
@@ -17,25 +25,92 @@ export function AIChatPanel() {
     clearAIMessages,
   } = useAIChat();
 
+  const isResizing = useRef(false);
+  const resizingRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!aiChatPanelVisible) {
       clearAIMessages();
     }
   }, [aiChatPanelVisible, clearAIMessages]);
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing.current) return;
+
+      const containerWidth =
+        resizingRef.current?.parentElement?.clientWidth || window.innerWidth;
+      const newWidth = containerWidth - e.clientX;
+
+      const clampedWidth = Math.min(Math.max(newWidth, MIN_WIDTH), MAX_WIDTH);
+      setAIChatPanelWidth(clampedWidth);
+    },
+    [setAIChatPanelWidth],
+  );
+
+  const handleMouseUp = useCallback(() => {
+    isResizing.current = false;
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
   if (!aiChatPanelVisible) return null;
 
   return (
     <div
+      ref={resizingRef}
       style={{
-        width: 320,
+        width: aiChatPanelWidth,
         height: "100%",
         backgroundColor: "var(--color-background)",
         borderLeft: "1px solid var(--color-border)",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
+      <div
+        onMouseDown={handleMouseDown}
+        style={{
+          position: "absolute",
+          left: -4,
+          top: 0,
+          bottom: 0,
+          width: 8,
+          cursor: "ew-resize",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10,
+        }}
+      >
+        <div
+          style={{
+            width: 2,
+            height: 40,
+            backgroundColor: "var(--color-border)",
+            borderRadius: 1,
+            opacity: 0.5,
+          }}
+        />
+      </div>
       <ChatHeader onClose={toggleAIChatPanel} />
       <XProvider>
         <div

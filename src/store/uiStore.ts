@@ -11,11 +11,15 @@ export interface UIStore {
   sidebarVisible: boolean;
   /** AI 聊天面板是否可见 */
   aiChatPanelVisible: boolean;
+  /** AI 聊天面板宽度 */
+  aiChatPanelWidth: number;
 
   /** 切换侧边栏可见状态 */
   toggleSidebar: () => void;
   /** 切换AI面板可见状态 */
   toggleAIChatPanel: () => void;
+  /** 设置AI面板宽度 */
+  setAIChatPanelWidth: (width: number) => void;
 
   /** 从后端加载偏好设置 */
   loadPreferences: () => Promise<void>;
@@ -31,6 +35,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
   },
   sidebarVisible: true,
   aiChatPanelVisible: false,
+  aiChatPanelWidth: 320,
 
   /**
    * 切换侧边栏可见状态
@@ -44,6 +49,13 @@ export const useUIStore = create<UIStore>((set, get) => ({
    */
   toggleAIChatPanel: () => {
     set((state) => ({ aiChatPanelVisible: !state.aiChatPanelVisible }));
+  },
+
+  /**
+   * 设置 AI 聊天面板宽度
+   */
+  setAIChatPanelWidth: (width) => {
+    set({ aiChatPanelWidth: width });
   },
 
   loadPreferences: async () => {

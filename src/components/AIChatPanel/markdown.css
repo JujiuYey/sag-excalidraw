@@ -1,0 +1,141 @@
+.markdown-content {
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+/* 标题 */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+}
+
+.markdown-content h2 {
+  font-size: 1.25em;
+}
+
+.markdown-content h3 {
+  font-size: 1.1em;
+}
+
+/* 段落 */
+.markdown-content p {
+  margin: 8px 0;
+}
+
+/* 引用块 */
+.markdown-content blockquote {
+  margin: 12px 0;
+  padding: 8px 16px;
+  border-left: 4px solid #9333ea;
+  background-color: rgb(147 51 234 / 10%);
+  border-radius: 0 4px 4px 0;
+}
+
+.markdown-content blockquote p {
+  margin: 0;
+}
+
+/* 内联代码 */
+.markdown-content .inline-code {
+  background-color: rgb(127 127 127 / 20%);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+/* 代码块容器 */
+.markdown-content pre {
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+/* 列表 */
+.markdown-content ul,
+.markdown-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.markdown-content li {
+  margin: 4px 0;
+}
+
+.markdown-content li>ul,
+.markdown-content li>ol {
+  margin: 4px 0;
+}
+
+/* 任务列表 */
+.markdown-content input[type="checkbox"] {
+  margin-right: 6px;
+}
+
+/* 表格 */
+.markdown-content table {
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 8px 12px;
+  border: 1px solid rgb(127 127 127 / 30%);
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: rgb(127 127 127 / 10%);
+  font-weight: 600;
+}
+
+/* 链接 */
+.markdown-content a {
+  color: #9333ea;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+/* 水平线 */
+.markdown-content hr {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid rgb(127 127 127 / 30%);
+}
+
+/* 图片 */
+.markdown-content img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+/* 删除线 */
+.markdown-content del {
+  opacity: 0.6;
+}
+
+/* 粗体和斜体 */
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
