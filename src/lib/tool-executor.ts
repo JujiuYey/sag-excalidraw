@@ -96,6 +96,7 @@ export class TauriToolExecutor implements ToolExecutor {
       }
 
       // 返回执行结果，如果是字符串直接返回，否则转换为JSON字符串
+      // 但需要确保只序列化一次
       return {
         success: true,
         result: typeof result === "string" ? result : JSON.stringify(result),

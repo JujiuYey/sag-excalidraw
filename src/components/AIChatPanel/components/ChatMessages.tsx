@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Bubble, Welcome, Think } from "@ant-design/x";
 import { Sparkles, Loader2 } from "lucide-react";
 import { AIMessage } from "@/types/ai";
@@ -17,6 +18,15 @@ interface BubbleItem {
 }
 
 export function ChatMessages({ messages }: ChatMessagesProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 自动滚动到底部
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const items: BubbleItem[] = messages.map((msg) => ({
     key: msg.id,
     role: msg.role === "user" ? "user" : "ai",
@@ -59,6 +69,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
 
   return (
     <div
+      ref={containerRef}
       style={{
         flex: 1,
         overflow: "auto",
@@ -85,7 +96,31 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
               const isStreaming = info.status === "loading";
               const parts = parseThinkContent(text, isStreaming);
 
-              if (parts.length === 0) return null;
+              // 内容为空时，如果正在加载则显示加载指示器
+              if (parts.length === 0) {
+                if (isStreaming) {
+                  return (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        color: "var(--color-muted-foreground)",
+                      }}
+                    >
+                      <Loader2
+                        style={{
+                          width: 16,
+                          height: 16,
+                          animation: "spin 1s linear infinite",
+                        }}
+                      />
+                      <span>思考中...</span>
+                    </div>
+                  );
+                }
+                return null;
+              }
 
               return (
                 <div

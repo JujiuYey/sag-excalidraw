@@ -242,6 +242,14 @@ export class AIService {
       content: string;
       tool_call_id?: string;
       name?: string;
+      tool_calls?: Array<{
+        id: string;
+        type: "function";
+        function: {
+          name: string;
+          arguments: string;
+        };
+      }>;
     };
     const toolCallsAccumulator = new Map<
       number,
@@ -438,6 +446,13 @@ export class AIService {
           content: string;
         }> = [];
 
+        // 添加额外的日志来验证tool_call_id
+        aiLogger.info(
+          "AI Service",
+          "工具调用完整列表",
+          JSON.stringify(toolCalls),
+        );
+
         for (const toolCall of toolCalls) {
           try {
             aiLogger.info("AI Service", "执行工具", {
@@ -451,8 +466,9 @@ export class AIService {
               toolCall.function.arguments,
             );
 
+            // 工具执行器已经返回JSON字符串，不需要再次序列化
             const resultContent = result.success
-              ? JSON.stringify(result.result)
+              ? result.result || JSON.stringify({})
               : JSON.stringify({ error: result.error });
 
             toolResults.push({
@@ -486,6 +502,14 @@ export class AIService {
           {
             role: "assistant",
             content: currentContent,
+            tool_calls: toolCalls.map((tc) => ({
+              id: tc.id,
+              type: "function" as const,
+              function: {
+                name: tc.function.name,
+                arguments: JSON.stringify(tc.function.arguments),
+              },
+            })),
           },
           ...toolResults,
         ];
