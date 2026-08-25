@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Bot,
   Brain,
   Key,
   Server,
@@ -9,11 +10,15 @@ import {
   XCircle,
   Loader2,
 } from "lucide-react";
-import { Button, Input, InputNumber, message } from "antd";
+import { Button, Input, InputNumber, message, Select } from "antd";
 import { useAIConfigStore } from "@/store/aiConfigStore";
-import type { ModelConfig } from "@/types/ai";
-import { DEFAULT_MODEL_CONFIG } from "@/constants/ai";
+import {
+  AI_PROVIDER_OPTIONS,
+  AI_PROVIDERS,
+  DEFAULT_MODEL_CONFIG,
+} from "@/constants/ai";
 import { createAIService } from "@/lib/ai-service";
+import type { AIProvider, ModelConfig } from "@/types/ai";
 import styles from "./AISettings.module.css";
 
 export function AISettings() {
@@ -39,6 +44,17 @@ export function AISettings() {
 
   const handleChange = (key: keyof ModelConfig, value: string | number) => {
     setLocalConfig((prev) => ({ ...prev, [key]: value }));
+    setTestResult(null);
+  };
+
+  const handleProviderChange = (provider: AIProvider) => {
+    const preset = AI_PROVIDERS[provider];
+    setLocalConfig((prev) => ({
+      ...prev,
+      provider,
+      ...(preset.baseUrl ? { baseUrl: preset.baseUrl } : {}),
+      ...(preset.model ? { model: preset.model } : {}),
+    }));
     setTestResult(null);
   };
 
@@ -76,6 +92,20 @@ export function AISettings() {
       <div className={styles.content}>
         <div className={styles.row}>
           <div className={styles.iconWrapper}>
+            <Bot className={styles.icon} />
+            <span>模型服务商</span>
+          </div>
+          <Select
+            value={localConfig.provider}
+            options={AI_PROVIDER_OPTIONS}
+            onChange={handleProviderChange}
+            onBlur={handleSave}
+            className={styles.select}
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.iconWrapper}>
             <Server className={styles.icon} />
             <span className="font-medium text-sm">API Base URL</span>
           </div>
@@ -97,7 +127,7 @@ export function AISettings() {
             onChange={(e) => handleChange("apiKey", e.target.value)}
             onBlur={handleSave}
             className={styles.input}
-            placeholder="sk-..."
+            placeholder="请输入 API Key"
           />
         </div>
 

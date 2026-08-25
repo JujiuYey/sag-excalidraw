@@ -17,11 +17,15 @@ export interface AIMessage {
   status: "success" | "error" | "pending";
 }
 
+export type AIProvider = "deepseek" | "minimax" | "custom";
+
 /**
  * 模型配置接口
  * 表示 AI 模型的配置参数
  */
 export interface ModelConfig {
+  /** 模型服务商 */
+  provider: AIProvider;
   /** API 基础 URL 地址 */
   baseUrl: string;
   /** API 密钥 */

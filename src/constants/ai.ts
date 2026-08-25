@@ -1,12 +1,39 @@
-import type { ModelConfig, Tool } from "@/types/ai";
+import type { AIProvider, ModelConfig, Tool } from "@/types/ai";
+
+export const DEFAULT_AI_PROVIDER: AIProvider = "deepseek";
+
+export const AI_PROVIDERS: Record<
+  AIProvider,
+  Partial<Pick<ModelConfig, "baseUrl" | "model">>
+> = {
+  deepseek: {
+    baseUrl: "https://api.deepseek.com",
+    model: "deepseek-v4-pro",
+  },
+  minimax: {
+    baseUrl: "https://api.minimaxi.com/v1",
+    model: "MiniMax-M3",
+  },
+  custom: {},
+};
+
+export const AI_PROVIDER_OPTIONS: Array<{
+  value: AIProvider;
+  label: string;
+}> = [
+  { value: "deepseek", label: "DeepSeek" },
+  { value: "minimax", label: "MiniMax" },
+  { value: "custom", label: "自定义" },
+];
 
 /**
  * 默认模型配置
  */
 export const DEFAULT_MODEL_CONFIG: ModelConfig = {
-  baseUrl: "",
+  provider: DEFAULT_AI_PROVIDER,
+  baseUrl: AI_PROVIDERS.deepseek.baseUrl ?? "",
   apiKey: "",
-  model: "",
+  model: AI_PROVIDERS.deepseek.model ?? "",
   temperature: 0.2,
   maxTokens: 4096,
   systemPrompt: `你是一个专业的图表生成助手，专注于帮助用户将自然语言描述转换为 Mermaid 语法图表。

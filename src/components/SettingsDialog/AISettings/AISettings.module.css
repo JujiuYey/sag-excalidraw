@@ -72,6 +72,10 @@
   font-weight: 500;
 }
 
+.select {
+  width: 256px;
+}
+
 .input {
   width: 256px;
   height: 32px;
